@@ -28,11 +28,12 @@ class Board:
 
     def generate_food(self):
         x, y = random.randint(1,self.width-1), random.randint(1,self.height-1)
-        while (x,y) in [(i[0],i[1]) for i in self.blit_pos ]:
+        blit_list = [(i[0],i[1]) for i in self.blit_pos ]
+        while (x,y) in blit_list:
              x, y = random.randint(1,self.width-1), random.randint(1,self.height-1)
-        
         self.foodx = x
         self.foody = y
+
     def get_food_coord(self):
         return (self.foodx,self.foody)
     def get_grid_size(self):
@@ -48,9 +49,10 @@ class Board:
         self.blit_pos.clear()
 brd = Board(50,50)
 
+
+################################SNAKE##############################
 class my_snake:
     def __init__(self):
-        #self.body = [[random.randint(1,brd.get_grid_size()[0]),random.randint(1,brd.get_grid_size()[1])]]
         self.body = [[5,5]]
         self.total_size = 0
         self.xspeed = SNAKE_SPEED
@@ -73,17 +75,30 @@ class my_snake:
             if(self.xspeed!=-SNAKE_SPEED):
                 self.yspeed = 0
                 self.xspeed = SNAKE_SPEED
+    
     def update(self):
 
-        if(((self.body[0][0]-brd.get_food_coord()[0])**2+(self.body[0][1]-brd.get_food_coord()[1])**2)**(0.5)<1):
-            self.body.append([self.body[0][0],self.body[0][1]])
+        non_head_body = [(i[0],i[1]) for i in self.body[1:]]
+        if((self.body[0][0],self.body[0][1]) in non_head_body or self.body[0][0]>brd.width or self.body[0][1]>brd.height or self.body[0][0]<0 or self.body[0][1]<0):
+            print("game over!")
+            print("your total Score is: ",self.total_size)
+            exit(0)
+        
+
+        food_coord = brd.get_food_coord()
+        self.need_food=False
+        if(self.body[0][0]==food_coord[0] and self.body[0][1]==food_coord[1]):
+            self.body.append([1,1])
             self.total_size+=1
-            brd.generate_food()
+            self.need_food = True
+        
 
         for i in range(self.total_size,0,-1):
                 self.body[i][0] = self.body[i-1][0]
                 self.body[i][1] = self.body[i-1][1]
-            
+        
+        
+
         self.body[0][0] +=self.xspeed
         self.body[0][1] +=self.yspeed
         
@@ -91,13 +106,15 @@ class my_snake:
 
     def blit(self):
         self.update()
-        # brd.add_blit(self.headx,self.heady,WHITE)
         for x, y in self.body:
             brd.add_blit(int(x),int(y),WHITE)
+        if self.need_food:
+            brd.generate_food()
+
 snake = my_snake()
 
 running = True
-
+need_food = True
 while running:
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
